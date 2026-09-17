@@ -777,18 +777,24 @@
         formMsg.classList.remove("err");
         submitBtn.disabled = true;
         try {
-          await RecommendStore.addSubmission({
+          const bookId = document.getElementById("fBookId").value.trim();
+          const result = await RecommendStore.addSubmission({
             bookName: fBookName.value,
-            bookId: document.getElementById("fBookId").value,
+            bookId,
             authorName: fAuthorName.value,
             authorId: document.getElementById("fAuthorId").value,
             carouselRec: fCarouselRec.value,
             oneLiner: fOneLiner.value,
           });
-          formMsg.textContent = "提交成功，感谢填写！";
+          if (result.replaced) {
+            alert("该书籍 ID 已提交过，旧记录已刷新为本次内容。\n书籍 ID：" + bookId);
+            formMsg.textContent = "已刷新该书籍 ID 的旧记录";
+          } else {
+            formMsg.textContent = "提交成功，感谢填写！";
+          }
           form.reset();
           syncPreview();
-          showToast("提交成功");
+          showToast(result.replaced ? "已刷新旧记录" : "提交成功");
         } catch (err) {
           formMsg.textContent = err.message || "提交失败，请稍后重试";
           formMsg.classList.add("err");
