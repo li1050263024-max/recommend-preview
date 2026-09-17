@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>效果预览</title>
+    <style>
+      /* Figma 375×826 清晰文字 + 细边框手机壳（固定尺寸） */
+      :root {
+        --ink: #333;
+        --muted: #787878;
+        --gray: #8a8a8a;
+        --tab: #a3a3a3;
+        --ph: #d9d9d9;
+        --blue: #3b9eff;
+        --screen-w: 375px;
+        --screen-h: 812px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        font-family: "PingFang SC", "SF Pro Text", "Helvetica Neue", "Microsoft YaHei", system-ui, sans-serif;
+        background: #e8ecf2;
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .stage {
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        padding: 20px 16px;
+        flex-wrap: wrap;
+      }
+
+      .form-panel {
+        width: 340px;
+        max-width: calc(100vw - 24px);
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px 18px 18px;
+        box-shadow: 0 12px 36px rgba(20, 28, 45, 0.1);
+        flex: none;
+      }
+      .form-panel h2 {
+        font-size: 17px;
+        font-weight: 650;
+        margin-bottom: 4px;
+      }
+      .form-panel .sub {
+        font-size: 12px;
+        color: #8a8f99;
+        margin-bottom: 16px;
+        line-height: 1.45;
+      }
+      .field {
+        margin-bottom: 12px;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        color: #555;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+      .field input,
+      .field textarea {
+        width: 100%;
+        border: 1px solid #e3e6ec;
+        border-radius: 8px;
+        padding: 9px 11px;
+        font-size: 13px;
+        font-family: inherit;
+        color: #222;
+        background: #fafbfc;
+        outline: none;
+        resize: vertical;
+      }
+      .field input:focus,
+      .field textarea:focus {
+        border-color: #7eb6ff;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(59, 158, 255, 0.15);
+      }
+      .field textarea { min-height: 64px; }
+      .submit-btn {
+        width: 100%;
+        margin-top: 6px;
+        border: 0;
+        border-radius: 10px;
+        padding: 11px 14px;
+        background: #3b9eff;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .submit-btn:hover { background: #2f8eeb; }
+      .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+      .form-msg {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #1a7f37;
+        min-height: 18px;
+      }
+      .form-msg.err { color: #c62828; }
+
+      /* 细手机壳：固定 375×812 屏 + 约 3px 细边 */
+      .phone {
+        width: calc(var(--screen-w) + 6px);
+        height: calc(var(--screen-h) + 6px);
+        flex: none;
+        background: #111;
+        border-radius: 32px;
+        padding: 3px;
+        box-shadow:
+          0 0 0 0.5px rgba(255,255,255,0.12) inset,
+          0 16px 40px rgba(20, 28, 45, 0.2);
+        position: relative;
+      }
+      .phone::before {
+        content: "";
+        position: absolute;
+        top: 9px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 92px;
+        height: 26px;
+        background: #000;
+        border-radius: 16px;
+        z-index: 20;
+        pointer-events: none;
+      }
+      .phone-inner {
+        width: var(--screen-w);
+        height: var(--screen-h);
+        border-radius: 29px;
+        overflow: hidden;
+        background: #fff;
+        position: relative;
+      }
+
+      .page {
+        width: var(--screen-w);
+        height: var(--screen-h);
+        background:
+          radial-gradient(120% 70% at 18% 0%, #fff7e9 0%, rgba(255,247,233,0) 55%),
+          radial-gradient(90% 60% at 88% 0%, #eef5ff 0%, rgba(238,245,255,0) 50%),
+          #f7f7f7;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .status {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 22px 0;
+        height: 44px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.2px;
+      }
+      .status .sys {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .status svg { display: block; }
+
+      .nav {
+        flex: none;
+        display: grid;
+        grid-template-columns: 40px 1fr 40px;
+        align-items: center;
+        height: 44px;
+        padding: 0 4px;
+      }
+      .nav .back {
+        width: 40px;
+        height: 40px;
+        border: 0;
+        background: transparent url("preview-assets/back.svg") center / 18px 18px no-repeat;
+        cursor: pointer;
+      }
+      .nav h1 {
+        text-align: center;
+        font-size: 17px;
+        font-weight: 600;
+        color: #111;
+      }
+
+      .cats {
+        flex: none;
+        display: flex;
+        gap: 16px;
+        padding: 6px 14px 12px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--gray);
+        white-space: nowrap;
+      }
+      .cats::-webkit-scrollbar { display: none; }
+      .cats .on {
+        color: #333;
+        font-weight: 600;
+        position: relative;
+      }
+      .cats .on::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -8px;
+        width: 16px;
+        height: 3px;
+        transform: translateX(-50%);
+        background: #333;
+        border-radius: 2px;
+      }
+
+      .main {
+        flex: 1;
+        padding: 0 6px 12px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+      }
+      .main::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+      .page,
+      .phone-inner,
+      .rank-tabs,
+      .cats {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .page::-webkit-scrollbar,
+      .phone-inner::-webkit-scrollbar,
+      .rank-tabs::-webkit-scrollbar,
+      .cats::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+      /* 轮播 */
+      .banner {
+        display: flex;
+        height: 96px;
+        background: #fff;
+        border-radius: 11px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      .banner-cover {
+        position: relative;
+        width: 208px;
+        height: 96px;
+        flex: none;
+        background: var(--ph);
+        border-radius: 8px;
+        overflow: hidden;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        display: block;
+      }
+      .banner-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .banner-cover:hover { outline: 2px solid rgba(59,158,255,.65); outline-offset: 1px; }
+      /* 有图时也保留「免费制作宣传封面」提示 */
+      .banner-tip {
+        position: absolute;
+        left: 7px;
+        bottom: 8px;
+        width: 192px;
+        font-size: 10px;
+        line-height: 1.35;
+        color: #b0b0b0;
+        text-align: left;
+        pointer-events: none;
+        z-index: 2;
+      }
+      .banner-cover.has-img .banner-tip {
+        display: block;
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+      }
+      /* 书名区：对齐 Figma 10px / 8px，右栏约 148px */
+      .banner-meta {
+        flex: 1;
+        min-width: 0;
+        width: 148px;
+        max-width: 148px;
+        padding: 8px 8px 4px 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 0;
+        overflow: hidden;
+        -webkit-text-size-adjust: none;
+        text-size-adjust: none;
+      }
+      .editable {
+        outline: none;
+        border-radius: 2px;
+        word-break: break-word;
+      }
+      .editable:focus,
+      .editable:hover {
+        background: rgba(59, 158, 255, 0.12);
+        box-shadow: inset 0 0 0 1px rgba(59, 158, 255, 0.45);
+      }
+      /* Figma 1:71 书名 10px Medium #333，宽 135 */
+      .banner-title {
+        width: 135px;
+        max-width: 100%;
+        font-size: 10px;
+        font-weight: 500;
+        color: #333;
+        line-height: 12px;
+        letter-spacing: 0;
+      }
+      /* Figma 1:77 作者 8px，右对齐单行，自右向左扩 */
+      .banner-author {
+        margin-top: 5px;
+        width: 100%;
+        font-size: 8px;
+        font-weight: 400;
+        color: #1e1e1e;
+        line-height: 10px;
+        text-align: right;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      /* Figma 1:72 推荐语 8px #787878 */
+      .banner-quotes {
+        margin-top: 9px;
+        width: 100%;
+        font-size: 8px;
+        font-weight: 400;
+        color: #787878;
+        line-height: 11px;
+      }
+
+      /* 榜单卡 */
+      .rank {
+        background: #fff;
+        border-radius: 10px;
+        padding: 10px 0 14px;
+        min-height: 340px;
+      }
+      .rank-tabs {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 12px 12px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--tab);
+        white-space: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .rank-tabs::-webkit-scrollbar { display: none; }
+      .rank-tabs .on {
+        color: #333;
+        position: relative;
+      }
+      .rank-tabs .on::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -10px;
+        height: 2px;
+        background: #333;
+        border-radius: 1px;
+      }
+      .rank-tabs .all {
+        margin-left: auto;
+        color: #333;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+      }
+      .rank-tabs .all::after {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-right: 1.5px solid #333;
+        border-bottom: 1.5px solid #333;
+        transform: rotate(-45deg);
+      }
+
+      /* Figma：封面 60×78，栏距约 86，文案宽约 67/71 */
+      .books {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 26px;
+        row-gap: 16px;
+        padding: 4px 12px 0 12px;
+        overflow: hidden;
+      }
+      .book {
+        width: 60px;
+        flex: none;
+      }
+      .book .cover {
+        width: 60px;
+        height: 78px;
+        border-radius: 5px;
+        background: var(--ph);
+        overflow: hidden;
+        display: block;
+        border: 0;
+        padding: 0;
+      }
+      .book .cover img {
+        width: 60px;
+        height: 78px;
+        object-fit: cover;
+        display: block;
+      }
+      .book.live .cover { cursor: pointer; }
+      .book.live .cover:hover { outline: 2px solid rgba(59,158,255,.65); outline-offset: 1px; }
+      .book-title {
+        margin-top: 5px;
+        width: 67px;
+        font-size: 10px;
+        font-weight: 500;
+        color: #333;
+        line-height: 1.2;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-all;
+      }
+      .book-rec {
+        margin-top: 4px;
+        width: 71px;
+        font-size: 8px;
+        font-weight: 400;
+        color: #787878;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-all;
+      }
+
+      .blocks {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .blocks .blk {
+        height: 160px;
+        background: var(--ph);
+        border-radius: 5px;
+      }
+
+      .tabbar {
+        flex: none;
+        height: 64px;
+        background: #fff;
+        border-top: 1px solid #eee;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .tab {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        font-size: 10px;
+        color: #666;
+      }
+      .tab .ico {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+      }
+      .tab .ico img {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+      }
+      .tab.on { color: var(--blue); font-weight: 600; }
+
+      /* 底栏用切图更准 */
+      .tabbar-img {
+        flex: none;
+        width: 100%;
+        height: 64px;
+        object-fit: cover;
+        object-position: center top;
+        background: #fff;
+        display: block;
+        border-top: 1px solid #eee;
+      }
+
+      .toast {
+        position: absolute;
+        left: 50%;
+        bottom: 80px;
+        transform: translateX(-50%);
+        background: rgba(20,24,32,.88);
+        color: #fff;
+        font-size: 12px;
+        padding: 8px 14px;
+        border-radius: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .2s;
+        z-index: 40;
+        white-space: nowrap;
+      }
+      .toast.show { opacity: 1; }
+
+      @media (max-width: 800px) {
+        .stage {
+          padding: 12px;
+          align-items: flex-start;
+          gap: 16px;
+        }
+        .form-panel { width: min(375px, 100%); order: 2; }
+        .phone { order: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+    <div class="phone">
+    <div class="phone-inner">
+    <div class="page">
+      <div class="status">
+        <span>9:41</span>
+        <span class="sys" aria-hidden="true">
+          <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="3" width="3" height="8" rx="0.5" fill="#111"/><rect x="4.5" y="2" width="3" height="9" rx="0.5" fill="#111"/><rect x="9" y="0.5" width="3" height="10.5" rx="0.5" fill="#111"/><rect x="13.5" y="0" width="3" height="11" rx="0.5" fill="#111"/></svg>
+          <svg width="15" height="11" viewBox="0 0 15 11"><path d="M7.5 3.2c1.7 0 3.2.7 4.3 1.8l-1.1 1.1A4.3 4.3 0 0 0 7.5 4.8c-1.2 0-2.3.5-3.1 1.3L3.2 5A5.8 5.8 0 0 1 7.5 3.2zm0 2.7c.9 0 1.7.3 2.4 1l-1.1 1.1a2.2 2.2 0 0 0-2.6 0L5.1 6.9c.7-.6 1.5-1 2.4-1zm0 2.8c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9z" fill="#111"/></svg>
+          <svg width="24" height="11" viewBox="0 0 24 11"><rect x="0" y="1" width="21" height="9" rx="2" stroke="#111" stroke-width="1" fill="none"/><rect x="1.5" y="2.5" width="17" height="6" rx="1" fill="#111"/><rect x="22" y="3.5" width="1.5" height="4" rx="0.5" fill="#111"/></svg>
+        </span>
+      </div>
+
+      <header class="nav">
+        <button class="back" type="button" aria-label="返回"></button>
+        <h1>效果预览</h1>
+        <span></span>
+      </header>
+
+      <div class="cats">
+        <span>角色广场</span>
+        <span class="on">推荐</span>
+        <span>影视同人</span>
+        <span>明星同人</span>
+        <span>动漫同人</span>
+        <span>更多</span>
+      </div>
+
+      <div class="main">
+        <section class="banner" aria-label="轮播推荐">
+          <button class="banner-cover has-img" id="bannerCoverBtn" type="button" title="更换轮播封面">
+            <img id="bannerCover" src="preview-assets/banner-default.png" alt="轮播封面" />
+            <div class="banner-tip">进入该轮播推荐池后，<br />平台将为您免费制作宣传封面</div>
+          </button>
+          <div class="banner-meta">
+            <div class="editable banner-title" id="carouselTitle" contenteditable="true" spellcheck="false">此处为书名</div>
+            <div class="editable banner-author" id="carouselAuthor" contenteditable="true" spellcheck="false">作者名/著</div>
+            <div class="editable banner-quotes" id="carouselQuotes" contenteditable="true" spellcheck="false">此处为推荐语</div>
+          </div>
+        </section>
+
+        <section class="rank" aria-label="推荐榜">
+          <div class="rank-tabs">
+            <span class="on">推荐榜</span>
+            <span>会员在追</span>
+            <span>完结榜</span>
+            <span>新书榜</span>
+            <span>原创榜</span>
+            <span class="all">完整榜单</span>
+          </div>
+          <div class="books" id="books">
+            <article class="book live">
+              <button class="cover" id="coverBtn" type="button" title="更换封面">
+                <img id="bookCover" src="preview-assets/book-cover.png" alt="封面" />
+              </button>
+              <div class="editable book-title" id="bookTitle" contenteditable="true" spellcheck="false">此处为书名</div>
+              <div class="editable book-rec" id="bookRec" contenteditable="true" spellcheck="false">此处为推荐语</div>
+            </article>
+          </div>
+        </section>
+
+        <div class="blocks">
+          <div class="blk"></div>
+          <div class="blk"></div>
+        </div>
+      </div>
+
+      <img class="tabbar-img" src="preview-assets/tabbar.png" alt="底部导航" />
+      <div class="toast" id="toast">封面已更新</div>
+      <input type="file" id="coverInput" accept="image/*" hidden />
+      <input type="file" id="bannerInput" accept="image/*" hidden />
+    </div>
+    </div>
+    </div>
+
+    <aside class="form-panel" aria-label="推荐语提交">
+      <h2>填写推荐信息</h2>
+      <p class="sub">填写后可实时预览左侧效果，提交后由工作人员在后台查看。</p>
+      <form id="recForm">
+        <div class="field">
+          <label for="fBookName">书籍名称</label>
+          <input id="fBookName" name="bookName" required placeholder="请输入书籍名称" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="fBookId">书籍 ID</label>
+          <input id="fBookId" name="bookId" required placeholder="请输入书籍 ID" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="fAuthorName">作者名称</label>
+          <input id="fAuthorName" name="authorName" required placeholder="请输入作者名称" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="fAuthorId">作者 ID</label>
+          <input id="fAuthorId" name="authorId" required placeholder="请输入作者 ID" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="fCarouselRec">轮播推荐语</label>
+          <textarea id="fCarouselRec" name="carouselRec" required placeholder="展示在轮播右侧的推荐语"></textarea>
+        </div>
+        <div class="field">
+          <label for="fOneLiner">一句话推荐语</label>
+          <textarea id="fOneLiner" name="oneLiner" required placeholder="展示在榜单书名下方"></textarea>
+        </div>
+        <button class="submit-btn" id="submitBtn" type="submit">提交</button>
+        <div class="form-msg" id="formMsg"></div>
+      </form>
+    </aside>
+    </div>
+
+    <script src="preview-store.js"></script>
+    <script>
+      const books = document.getElementById("books");
+      for (let i = 0; i < 7; i++) {
+        const el = document.createElement("div");
+        el.className = "book";
+        el.innerHTML = '<div class="cover"></div>';
+        books.appendChild(el);
+      }
+
+      const toast = document.getElementById("toast");
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => toast.classList.remove("show"), 1400);
+      }
+
+      function bindImagePicker(btn, input, img, { onSet } = {}) {
+        btn.addEventListener("click", () => input.click());
+        input.addEventListener("change", () => {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          const url = URL.createObjectURL(file);
+          img.onload = () => URL.revokeObjectURL(url);
+          img.src = url;
+          img.hidden = false;
+          if (onSet) onSet();
+          showToast("封面已更新");
+        });
+      }
+
+      bindImagePicker(
+        document.getElementById("coverBtn"),
+        document.getElementById("coverInput"),
+        document.getElementById("bookCover")
+      );
+
+      const bannerBtn = document.getElementById("bannerCoverBtn");
+      bindImagePicker(
+        bannerBtn,
+        document.getElementById("bannerInput"),
+        document.getElementById("bannerCover"),
+        { onSet: () => bannerBtn.classList.add("has-img") }
+      );
+      bannerBtn.classList.add("has-img");
+
+      ["carouselTitle", "carouselAuthor", "bookTitle"].forEach((id) => {
+        const el = document.getElementById(id);
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); el.blur(); }
+        });
+      });
+
+      const fBookName = document.getElementById("fBookName");
+      const fAuthorName = document.getElementById("fAuthorName");
+      const fCarouselRec = document.getElementById("fCarouselRec");
+      const fOneLiner = document.getElementById("fOneLiner");
+      const carouselTitle = document.getElementById("carouselTitle");
+      const carouselAuthor = document.getElementById("carouselAuthor");
+      const carouselQuotes = document.getElementById("carouselQuotes");
+      const bookTitle = document.getElementById("bookTitle");
+      const bookRec = document.getElementById("bookRec");
+
+      function syncPreview() {
+        const name = fBookName.value.trim() || "此处为书名";
+        const author = fAuthorName.value.trim();
+        carouselTitle.textContent = name;
+        bookTitle.textContent = name;
+        carouselAuthor.textContent = author ? author + "/著" : "作者名/著";
+        carouselQuotes.textContent = fCarouselRec.value.trim() || "此处为推荐语";
+        bookRec.textContent = fOneLiner.value.trim() || "此处为推荐语";
+      }
+      [fBookName, fAuthorName, fCarouselRec, fOneLiner].forEach((el) => {
+        el.addEventListener("input", syncPreview);
+      });
+
+      const form = document.getElementById("recForm");
+      const formMsg = document.getElementById("formMsg");
+      const submitBtn = document.getElementById("submitBtn");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        formMsg.textContent = "";
+        formMsg.classList.remove("err");
+        submitBtn.disabled = true;
+        try {
+          await RecommendStore.addSubmission({
+            bookName: fBookName.value,
+            bookId: document.getElementById("fBookId").value,
+            authorName: fAuthorName.value,
+            authorId: document.getElementById("fAuthorId").value,
+            carouselRec: fCarouselRec.value,
+            oneLiner: fOneLiner.value,
+          });
+          formMsg.textContent = "提交成功，感谢填写！";
+          form.reset();
+          syncPreview();
+          showToast("提交成功");
+        } catch (err) {
+          formMsg.textContent = err.message || "提交失败，请稍后重试";
+          formMsg.classList.add("err");
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
