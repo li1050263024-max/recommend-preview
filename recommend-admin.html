@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>推荐语收集 · 工作人员后台</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        background: #f0f2f5;
+        color: #222;
+        min-height: 100vh;
+      }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 48px; }
+      h1 { font-size: 22px; margin-bottom: 6px; }
+      .hint { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.5; }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,.06);
+      }
+      .gate label { display: block; font-size: 13px; margin-bottom: 6px; }
+      .gate input {
+        width: min(320px, 100%);
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+      .gate button, .toolbar button {
+        margin-top: 12px;
+        margin-right: 8px;
+        border: 0;
+        border-radius: 8px;
+        padding: 9px 16px;
+        background: #3b9eff;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .gate button.secondary, .toolbar button.secondary {
+        background: #eef1f5;
+        color: #333;
+      }
+      .err { color: #c62828; font-size: 13px; margin-top: 10px; }
+      .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+      .count { font-size: 13px; color: #666; margin-left: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th, td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid #eee;
+        vertical-align: top;
+        word-break: break-word;
+      }
+      th { color: #888; font-weight: 600; font-size: 12px; white-space: nowrap; }
+      tr:hover td { background: #fafbfd; }
+      .empty { padding: 40px; text-align: center; color: #999; }
+      .hidden { display: none !important; }
+      .rec { max-width: 220px; color: #555; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>推荐语收集后台</h1>
+      <p class="hint">仅工作人员使用。填写页不展示此入口。口令请内部传达。</p>
+
+      <div class="card gate" id="gate">
+        <label for="pass">工作人员口令</label>
+        <input id="pass" type="password" placeholder="请输入口令" />
+        <div>
+          <button type="button" id="loginBtn">进入后台</button>
+        </div>
+        <div class="err" id="gateErr"></div>
+      </div>
+
+      <div class="card hidden" id="panel">
+        <div class="toolbar">
+          <button type="button" id="refreshBtn">刷新</button>
+          <button type="button" class="secondary" id="exportBtn">导出 JSON</button>
+          <button type="button" class="secondary" id="clearBtn">清空全部</button>
+          <span class="count" id="count"></span>
+        </div>
+        <div id="tableWrap"></div>
+      </div>
+    </div>
+
+    <script src="preview-store.js"></script>
+    <script>
+      const gate = document.getElementById("gate");
+      const panel = document.getElementById("panel");
+      const gateErr = document.getElementById("gateErr");
+      const SESSION_KEY = "recommend-admin-ok";
+
+      function unlock() {
+        gate.classList.add("hidden");
+        panel.classList.remove("hidden");
+        sessionStorage.setItem(SESSION_KEY, "1");
+        loadTable();
+      }
+
+      if (sessionStorage.getItem(SESSION_KEY) === "1") unlock();
+
+      document.getElementById("loginBtn").addEventListener("click", () => {
+        const pass = document.getElementById("pass").value;
+        if (RecommendStore.checkAdminPass(pass)) {
+          gateErr.textContent = "";
+          unlock();
+        } else {
+          gateErr.textContent = "口令错误";
+        }
+      });
+      document.getElementById("pass").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("loginBtn").click();
+      });
+
+      function esc(s) {
+        return String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      async function loadTable() {
+        const wrap = document.getElementById("tableWrap");
+        const items = await RecommendStore.listSubmissions();
+        document.getElementById("count").textContent = `共 ${items.length} 条`;
+        if (!items.length) {
+          wrap.innerHTML = '<div class="empty">暂无提交</div>';
+          return;
+        }
+        wrap.innerHTML = `
+          <div style="overflow:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>书籍名称</th>
+                  <th>书籍ID</th>
+                  <th>作者名称</th>
+                  <th>作者ID</th>
+                  <th>轮播推荐语</th>
+                  <th>一句话推荐语</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items
+                  .map(
+                    (it) => `<tr>
+                  <td>${esc((it.createdAt || "").replace("T", " ").slice(0, 19))}</td>
+                  <td>${esc(it.bookName)}</td>
+                  <td>${esc(it.bookId)}</td>
+                  <td>${esc(it.authorName)}</td>
+                  <td>${esc(it.authorId)}</td>
+                  <td class="rec">${esc(it.carouselRec)}</td>
+                  <td class="rec">${esc(it.oneLiner)}</td>
+                </tr>`
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>`;
+      }
+
+      document.getElementById("refreshBtn").addEventListener("click", loadTable);
+      document.getElementById("exportBtn").addEventListener("click", async () => {
+        const items = await RecommendStore.listSubmissions();
+        const blob = new Blob([JSON.stringify({ items }, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `recommend-submissions-${Date.now()}.json`;
+        a.click();
+      });
+      document.getElementById("clearBtn").addEventListener("click", async () => {
+        if (!confirm("确认清空全部收集数据？")) return;
+        await RecommendStore.clearSubmissions();
+        loadTable();
+      });
+    </script>
+  </body>
+</html>
