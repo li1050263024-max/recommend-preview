@@ -349,7 +349,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      /* Figma 1:72 推荐语 8px #787878 */
+      /* 轮播推荐语：限 60 字，超出省略 */
       .banner-quotes {
         margin-top: 9px;
         width: 100%;
@@ -357,6 +357,11 @@
         font-weight: 400;
         color: #787878;
         line-height: 11px;
+        display: -webkit-box;
+        -webkit-line-clamp: 6;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-all;
       }
 
       /* 榜单卡 */
@@ -461,7 +466,7 @@
         color: #787878;
         line-height: 1.25;
         display: -webkit-box;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         word-break: break-all;
@@ -589,7 +594,7 @@
           <div class="banner-meta">
             <div class="editable banner-title" id="carouselTitle" contenteditable="true" spellcheck="false">此处为书名</div>
             <div class="editable banner-author" id="carouselAuthor" contenteditable="true" spellcheck="false">作者名/著</div>
-            <div class="editable banner-quotes" id="carouselQuotes" contenteditable="true" spellcheck="false">此处为推荐语</div>
+            <div class="editable banner-quotes" id="carouselQuotes" contenteditable="true" spellcheck="false">【此处为轮播推荐语，限60字】</div>
           </div>
         </section>
 
@@ -608,7 +613,7 @@
                 <img id="bookCover" src="preview-assets/book-cover.png" alt="封面" />
               </button>
               <div class="editable book-title" id="bookTitle" contenteditable="true" spellcheck="false">此处为书名</div>
-              <div class="editable book-rec" id="bookRec" contenteditable="true" spellcheck="false">此处为推荐语</div>
+              <div class="editable book-rec" id="bookRec" contenteditable="true" spellcheck="false">【此处为榜单推荐语，限16字】</div>
             </article>
           </div>
         </section>
@@ -648,12 +653,12 @@
           <input id="fAuthorId" name="authorId" required placeholder="请输入作者 ID" autocomplete="off" />
         </div>
         <div class="field">
-          <label for="fCarouselRec">轮播推荐语</label>
-          <textarea id="fCarouselRec" name="carouselRec" required placeholder="展示在轮播右侧的推荐语"></textarea>
+          <label for="fCarouselRec">轮播推荐语（限60字）</label>
+          <textarea id="fCarouselRec" name="carouselRec" required maxlength="60" placeholder="【此处为轮播推荐语，限60字】"></textarea>
         </div>
         <div class="field">
-          <label for="fOneLiner">一句话推荐语</label>
-          <textarea id="fOneLiner" name="oneLiner" required placeholder="展示在榜单书名下方"></textarea>
+          <label for="fOneLiner">榜单推荐语（限16字，最多两行）</label>
+          <textarea id="fOneLiner" name="oneLiner" required maxlength="16" placeholder="【此处为榜单推荐语，限16字】"></textarea>
         </div>
         <button class="submit-btn" id="submitBtn" type="submit">提交</button>
         <div class="form-msg" id="formMsg"></div>
@@ -725,18 +730,43 @@
       const bookTitle = document.getElementById("bookTitle");
       const bookRec = document.getElementById("bookRec");
 
+      function ellipsis(text, max) {
+        const s = String(text || "");
+        if (s.length <= max) return s;
+        return s.slice(0, max) + "…";
+      }
+
       function syncPreview() {
         const name = fBookName.value.trim() || "此处为书名";
         const author = fAuthorName.value.trim();
         carouselTitle.textContent = name;
         bookTitle.textContent = name;
         carouselAuthor.textContent = author ? author + "/著" : "作者名/著";
-        carouselQuotes.textContent = fCarouselRec.value.trim() || "此处为推荐语";
-        bookRec.textContent = fOneLiner.value.trim() || "此处为推荐语";
+        const carouselRaw = fCarouselRec.value.trim() || "【此处为轮播推荐语，限60字】";
+        const rankRaw = fOneLiner.value.trim() || "【此处为榜单推荐语，限16字】";
+        carouselQuotes.textContent = ellipsis(carouselRaw, 60);
+        bookRec.textContent = ellipsis(rankRaw, 16);
       }
       [fBookName, fAuthorName, fCarouselRec, fOneLiner].forEach((el) => {
         el.addEventListener("input", syncPreview);
       });
+
+      function clampEditable(el, max) {
+        el.addEventListener("input", () => {
+          const t = el.innerText.replace(/\n/g, "");
+          if (t.length > max) {
+            el.textContent = t.slice(0, max) + "…";
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        });
+      }
+      clampEditable(carouselQuotes, 60);
+      clampEditable(bookRec, 16);
 
       const form = document.getElementById("recForm");
       const formMsg = document.getElementById("formMsg");
