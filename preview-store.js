@@ -1,7 +1,7 @@
 /* 推荐语收集：优先同源 API，否则 localStorage（静态站） */
 (function (global) {
   const STORAGE_KEY = "recommend-preview-submissions-v1";
-  const ADMIN_PASS = "staff888";
+  const ADMIN_PASS = "123";
 
   function uid() {
     return "s_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
@@ -39,10 +39,11 @@
     return readLocal();
   }
 
-  async function addSubmission(payload) {
-    const item = {
-      id: uid(),
-      createdAt: new Date().toISOString(),
+  function buildItem(payload, prev) {
+    return {
+      id: (prev && prev.id) || uid(),
+      createdAt: (prev && prev.createdAt) || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       bookName: String(payload.bookName || "").trim(),
       bookId: String(payload.bookId || "").trim(),
       authorName: String(payload.authorName || "").trim(),
@@ -50,20 +51,39 @@
       carouselRec: String(payload.carouselRec || "").trim(),
       oneLiner: String(payload.oneLiner || "").trim(),
     };
+  }
+
+  async function addSubmission(payload) {
+    const bookId = String(payload.bookId || "").trim();
     if (await apiAvailable()) {
       const res = await fetch("/api/recommend-submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item),
+        body: JSON.stringify({
+          bookName: payload.bookName,
+          bookId,
+          authorName: payload.authorName,
+          authorId: payload.authorId,
+          carouselRec: payload.carouselRec,
+          oneLiner: payload.oneLiner,
+        }),
       });
       if (!res.ok) throw new Error("提交失败");
       const data = await res.json();
-      return data.item || item;
+      return {
+        item: data.item,
+        replaced: Boolean(data.replaced),
+      };
     }
+
     const list = readLocal();
+    const idx = list.findIndex((it) => String(it.bookId) === bookId && bookId);
+    const replaced = idx >= 0;
+    const item = buildItem(payload, replaced ? list[idx] : null);
+    if (replaced) list.splice(idx, 1);
     list.unshift(item);
     writeLocal(list);
-    return item;
+    return { item, replaced };
   }
 
   async function clearSubmissions() {
@@ -81,7 +101,7 @@
 
   global.RecommendStore = {
     STORAGE_KEY,
-    ADMIN_PASS_HINT: "staff888",
+    ADMIN_PASS_HINT: "123",
     listSubmissions,
     addSubmission,
     clearSubmissions,
