@@ -36,82 +36,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 28px;
         padding: 20px 16px;
-        flex-wrap: wrap;
       }
-
-      .form-panel {
-        width: 340px;
-        max-width: calc(100vw - 24px);
-        background: #fff;
-        border-radius: 16px;
-        padding: 20px 18px 18px;
-        box-shadow: 0 12px 36px rgba(20, 28, 45, 0.1);
-        flex: none;
-      }
-      .form-panel h2 {
-        font-size: 17px;
-        font-weight: 650;
-        margin-bottom: 4px;
-      }
-      .form-panel .sub {
-        font-size: 12px;
-        color: #8a8f99;
-        margin-bottom: 16px;
-        line-height: 1.45;
-      }
-      .field {
-        margin-bottom: 12px;
-      }
-      .field label {
-        display: block;
-        font-size: 12px;
-        color: #555;
-        margin-bottom: 5px;
-        font-weight: 500;
-      }
-      .field input,
-      .field textarea {
-        width: 100%;
-        border: 1px solid #e3e6ec;
-        border-radius: 8px;
-        padding: 9px 11px;
-        font-size: 13px;
-        font-family: inherit;
-        color: #222;
-        background: #fafbfc;
-        outline: none;
-        resize: vertical;
-      }
-      .field input:focus,
-      .field textarea:focus {
-        border-color: #7eb6ff;
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba(59, 158, 255, 0.15);
-      }
-      .field textarea { min-height: 64px; }
-      .submit-btn {
-        width: 100%;
-        margin-top: 6px;
-        border: 0;
-        border-radius: 10px;
-        padding: 11px 14px;
-        background: #3b9eff;
-        color: #fff;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-      }
-      .submit-btn:hover { background: #2f8eeb; }
-      .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-      .form-msg {
-        margin-top: 10px;
-        font-size: 12px;
-        color: #1a7f37;
-        min-height: 18px;
-      }
-      .form-msg.err { color: #c62828; }
 
       /* 细手机壳：固定 375×812 屏 + 约 3px 细边 */
       .phone {
@@ -349,7 +275,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      /* 轮播推荐语：限 60 字，超出省略 */
+      /* 轮播简介：限 60 字，保留换行，超出省略 */
       .banner-quotes {
         margin-top: 9px;
         width: 100%;
@@ -357,11 +283,10 @@
         font-weight: 400;
         color: #787878;
         line-height: 11px;
-        display: -webkit-box;
-        -webkit-line-clamp: 6;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        white-space: pre-wrap;
         word-break: break-all;
+        overflow: hidden;
+        max-height: 66px;
       }
 
       /* 榜单卡 */
@@ -545,14 +470,8 @@
       }
       .toast.show { opacity: 1; }
 
-      @media (max-width: 800px) {
-        .stage {
-          padding: 12px;
-          align-items: flex-start;
-          gap: 16px;
-        }
-        .form-panel { width: min(375px, 100%); order: 2; }
-        .phone { order: 1; }
+      @media (max-width: 400px) {
+        .stage { padding: 8px; align-items: flex-start; }
       }
     </style>
   </head>
@@ -594,7 +513,7 @@
           <div class="banner-meta">
             <div class="editable banner-title" id="carouselTitle" contenteditable="true" spellcheck="false">此处为书名</div>
             <div class="editable banner-author" id="carouselAuthor" contenteditable="true" spellcheck="false">作者名/著</div>
-            <div class="editable banner-quotes" id="carouselQuotes" contenteditable="true" spellcheck="false">【此处为轮播推荐语，限60字】</div>
+            <div class="editable banner-quotes" id="carouselQuotes" contenteditable="true" spellcheck="false">【此处展示简介前60个字，保留换行格式】</div>
           </div>
         </section>
 
@@ -631,42 +550,8 @@
     </div>
     </div>
     </div>
-
-    <aside class="form-panel" aria-label="推荐语提交">
-      <h2>填写推荐信息</h2>
-      <p class="sub">填写后可实时预览左侧效果，提交后由工作人员在后台查看。</p>
-      <form id="recForm">
-        <div class="field">
-          <label for="fBookName">书籍名称</label>
-          <input id="fBookName" name="bookName" required placeholder="请输入书籍名称" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="fBookId">书籍 ID</label>
-          <input id="fBookId" name="bookId" required placeholder="请输入书籍 ID" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="fAuthorName">作者名称</label>
-          <input id="fAuthorName" name="authorName" required placeholder="请输入作者名称" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="fAuthorId">作者 ID</label>
-          <input id="fAuthorId" name="authorId" required placeholder="请输入作者 ID" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label for="fCarouselRec">轮播推荐语（限60字）</label>
-          <textarea id="fCarouselRec" name="carouselRec" required maxlength="60" placeholder="【此处为轮播推荐语，限60字】"></textarea>
-        </div>
-        <div class="field">
-          <label for="fOneLiner">榜单推荐语（限16字，最多两行）</label>
-          <textarea id="fOneLiner" name="oneLiner" required maxlength="16" placeholder="【此处为榜单推荐语，限16字】"></textarea>
-        </div>
-        <button class="submit-btn" id="submitBtn" type="submit">提交</button>
-        <div class="form-msg" id="formMsg"></div>
-      </form>
-    </aside>
     </div>
 
-    <script src="preview-store.js"></script>
     <script>
       const books = document.getElementById("books");
       for (let i = 0; i < 7; i++) {
@@ -720,86 +605,48 @@
         });
       });
 
-      const fBookName = document.getElementById("fBookName");
-      const fAuthorName = document.getElementById("fAuthorName");
-      const fCarouselRec = document.getElementById("fCarouselRec");
-      const fOneLiner = document.getElementById("fOneLiner");
-      const carouselTitle = document.getElementById("carouselTitle");
-      const carouselAuthor = document.getElementById("carouselAuthor");
+      /** 截断到 max 字，保留换行；超出加省略号 */
+      function ellipsisKeepBreaks(text, max) {
+        const s = String(text || "").replace(/\r/g, "");
+        let count = 0;
+        let out = "";
+        for (const ch of s) {
+          if (count >= max) {
+            out += "…";
+            break;
+          }
+          out += ch;
+          count += 1;
+        }
+        return out;
+      }
+
+      function placeCaretEnd(el) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
       const carouselQuotes = document.getElementById("carouselQuotes");
-      const bookTitle = document.getElementById("bookTitle");
       const bookRec = document.getElementById("bookRec");
 
-      function ellipsis(text, max) {
-        const s = String(text || "");
-        if (s.length <= max) return s;
-        return s.slice(0, max) + "…";
-      }
-
-      function syncPreview() {
-        const name = fBookName.value.trim() || "此处为书名";
-        const author = fAuthorName.value.trim();
-        carouselTitle.textContent = name;
-        bookTitle.textContent = name;
-        carouselAuthor.textContent = author ? author + "/著" : "作者名/著";
-        const carouselRaw = fCarouselRec.value.trim() || "【此处为轮播推荐语，限60字】";
-        const rankRaw = fOneLiner.value.trim() || "【此处为榜单推荐语，限16字】";
-        carouselQuotes.textContent = ellipsis(carouselRaw, 60);
-        bookRec.textContent = ellipsis(rankRaw, 16);
-      }
-      [fBookName, fAuthorName, fCarouselRec, fOneLiner].forEach((el) => {
-        el.addEventListener("input", syncPreview);
+      carouselQuotes.addEventListener("input", () => {
+        const raw = carouselQuotes.innerText.replace(/\r/g, "");
+        const chars = [...raw];
+        if (chars.length > 60) {
+          carouselQuotes.innerText = ellipsisKeepBreaks(raw, 60);
+          placeCaretEnd(carouselQuotes);
+        }
       });
 
-      function clampEditable(el, max) {
-        el.addEventListener("input", () => {
-          const t = el.innerText.replace(/\n/g, "");
-          if (t.length > max) {
-            el.textContent = t.slice(0, max) + "…";
-            const range = document.createRange();
-            range.selectNodeContents(el);
-            range.collapse(false);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-        });
-      }
-      clampEditable(carouselQuotes, 60);
-      clampEditable(bookRec, 16);
-
-      const form = document.getElementById("recForm");
-      const formMsg = document.getElementById("formMsg");
-      const submitBtn = document.getElementById("submitBtn");
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        formMsg.textContent = "";
-        formMsg.classList.remove("err");
-        submitBtn.disabled = true;
-        try {
-          const bookId = document.getElementById("fBookId").value.trim();
-          const result = await RecommendStore.addSubmission({
-            bookName: fBookName.value,
-            bookId,
-            authorName: fAuthorName.value,
-            authorId: document.getElementById("fAuthorId").value,
-            carouselRec: fCarouselRec.value,
-            oneLiner: fOneLiner.value,
-          });
-          if (result.replaced) {
-            alert("该书籍 ID 已提交过，旧记录已刷新为本次内容。\n书籍 ID：" + bookId);
-            formMsg.textContent = "已刷新该书籍 ID 的旧记录";
-          } else {
-            formMsg.textContent = "提交成功，感谢填写！";
-          }
-          form.reset();
-          syncPreview();
-          showToast(result.replaced ? "已刷新旧记录" : "提交成功");
-        } catch (err) {
-          formMsg.textContent = err.message || "提交失败，请稍后重试";
-          formMsg.classList.add("err");
-        } finally {
-          submitBtn.disabled = false;
+      bookRec.addEventListener("input", () => {
+        const t = bookRec.innerText.replace(/\r/g, "").replace(/\n/g, "");
+        if (t.length > 16) {
+          bookRec.textContent = t.slice(0, 16) + "…";
+          placeCaretEnd(bookRec);
         }
       });
     </script>
